@@ -1,35 +1,69 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useMemo } from "react";
+import {
+  CircularProgressbarWithChildren,
+  buildStyles,
+} from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
+import useTimer from "./hooks/useTimer";
+import useCalculateTime from "./hooks/useCalculateTime";
+import Label from "./components/Label";
+import TimeDisplay from "./components/TimeDisplay";
+import ToggleButton from "./components/ToggleButton";
+import { controllers } from "./constants";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const {
+    pomodoro,
+    selectedControl,
+    setPomodoro,
+    setSelectedControl,
+    resetTimerValues,
+    getRemainingTimePercentage,
+  } = useTimer();
+  const { minutes, seconds } = useCalculateTime(pomodoro, selectedControl);
+
+  useEffect(() => {
+    document.title = `${controllers[selectedControl].label} - ${
+      minutes < 9 ? "0" : ""
+    }${minutes}:${seconds < 9 ? "0" : ""}${seconds}`;
+  }, [selectedControl, minutes, seconds]);
+
+  const customStyles = useMemo(
+    () =>
+      buildStyles({
+        trailColor: "transparent",
+        pathColor: "#f87070",
+      }),
+    []
+  );
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <main className="relative flex flex-col items-center justify-center">
+      <Label
+        selectedControl={selectedControl}
+        setSelectedControl={setSelectedControl}
+        resetTimerValues={resetTimerValues}
+        setPomodoro={setPomodoro}
+      />
+      <div className="timer-container">
+        <div className="timer">
+          <div className="relative flex flex-col items-center justify-center font-semibold">
+            <CircularProgressbarWithChildren
+              strokeWidth={2}
+              styles={customStyles}
+              value={100}
+            >
+              <TimeDisplay
+                selectedControl={selectedControl}
+                pomodoro={pomodoro}
+              />
+              <ToggleButton pomodoro={pomodoro} setPomodoro={setPomodoro} />
+            </CircularProgressbarWithChildren>
+          </div>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
-  )
+    </main>
+  );
 }
 
-export default App
+export default App;
